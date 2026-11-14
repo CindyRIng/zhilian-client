@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+exploration/**/artifacts/
+exploration/**/controller.mjs.tmp
+.DS_Store

@@ -1,0 +1,14 @@
+{
+  "name": "zhilian-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "智联招聘本地只读客户端：cloak 浏览器会话保活 + 职位/公司检索 + CLI/REST/MCP/SKILL",
+  "type": "module",
+  "engines": { "node": ">=22.5.0" },
+  "dependencies": {
+    "cloakbrowser": "0.6.5",
+    "playwright-core": "1.65.0"
+  },
+  "license": "MIT",
+  "author": "CindyRIng"
+}
