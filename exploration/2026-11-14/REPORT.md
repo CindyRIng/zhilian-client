@@ -426,7 +426,7 @@ GET https://fe-api.zhaopin.com/c/i/jobs/position-detailv3?number=<positionNumber
 
 - 公司职位页 `/companydetail/jobs-<companyNumber>/` 首屏 SSR 只返回 **20 条**（实测某公司 `onlinePositionsCount=21`、`onlinePositions` 20 条）。
 - 页面底部有 SEO 分页链接 `?p=2`，但实测 `?p=2`（带/不带尾斜杠）SSR 仍返回第 1 页内容，`onlinePositionsPage` 恒为 1；未观察到加载更多 XHR。
-- 结论：公司职位页 **v1 只取首屏 20 条**，超过 20 条时 `truncated=true`；完整分页机制待后续（可能需要 SPA 内交互/其他接口）。
+- 结论（旧）：当时只取首屏 20 条；**已解决**，见 §17.3（fe-api `/c/i/company/search-position` 分页全量）。
 
 ### 16.8 其他登录后实测
 
@@ -465,7 +465,20 @@ GET https://fe-api.zhaopin.com/c/i/jobs/position-detailv3?number=<positionNumber
 1. **EdgeOne 也保护公司页**：`/companydetail/*`、`/companydetail/jobs-*` 的文档 `fetch` 会先返回 JS 挑战脚本（写 `EO_Bot_Ssid` / `__tst_status` 后重载），风控升级时会变成勾选框挑战；客户端策略：真实页面导航执行挑战 → 需要时 `verification` 中继 → 重试。
 2. **headless 可过 EdgeOne**：headless 下 `verification.solve {kind:"edgeone",auto:true}` 点击 iframe 内 `#verifyCheckbox` 实测通过，token 续期 30 天。
 3. **load-more 请求依赖登录态**：body 需要 `at`/`rt`/`resumeNumber`，登录后翻页正常；匿名模式仍只 1 页 20 条。
-4. **公司职位页仍只返回首屏 20 条**：`onlinePositionsCount=21` 而 `onlinePositions=20`；v1 以 `truncated=true` 表达。
+4. **公司职位页首屏只返回 20 条**：`onlinePositionsCount=21` 而 `onlinePositions=20`；**已解决**——改用 fe-api `/c/i/company/search-position` 分页接口拉全量（见 §17.3）。
 5. **搜索 `count=1000`**：load-more 响应中的 `data.count` 为上游结果上限，`pagesAvailable` 由客户端按 count/pageSize 推导（50）。
 6. **`/v1/health` 必须轻量**：最初实现里 health 调用了 `status`（两次上游请求）导致 CLI 自动探测超时并误启动本地 App（`ALREADY_RUNNING`）；改为纯本地快照后修复。
 7. **CLI 终端二维码**：上游二维码是 JPEG，pngjs 无法解码；CLI 改为保存文件 + 打印路径，REST 仍返回 Base64。
+
+
+### 17.3 公司全部职位全量（2026-11-14 20:55）
+
+- 发现路径（页面 bundle）：`companydetail._code_.web.*.js` 中 `getOnlinePositons` 调用
+  `GET ~apiDomain/c/i/company/search-position`（另有一条 `POST cgate…/searchPositionsCompany` 变体需额外头）。
+- 实测 `GET https://fe-api.zhaopin.com/c/i/company/search-position`：
+  `S_SOU_COMPANY_ID=CZL1316344860&pageSize=100&pageIndex=1&at&rt&platform=13&version=0.0.0`
+  → `{code:200,apiCode:200,data:{count:21,list:[21 条],isEndPage:1}}`（pageSize=100 一次拿全）；
+  `pageSize=20,pageIndex=2` → `count:21,list:[1 条],isEndPage:1`。
+- 实现：`companies.jobs` 优先走该接口（pageSize=100、pageIndex 循环、最多 10 页保护），SSR 仅回退；
+  旧版首屏缓存通过 meta `company_jobs_full_v1` 标记自动失效一次。
+- 实测结果：某公司 `jobCount=21`、`jobs=21`、`truncated=false`（此前 20/21 + truncated=true）。

@@ -15,6 +15,7 @@ import { RateLimiter, sleep } from './rate-limiter.js';
 import {
   checkTokenUrl,
   companyJobsPageUrl,
+  companyPositionsUrl,
   companyPageUrl,
   jobDetailPageUrl,
   positionDetailApiUrl,
@@ -27,6 +28,7 @@ import {
 import {
   RawCompanyDetailStateSchema,
   RawCompanyJobsStateSchema,
+  RawCompanyPositionListSchema,
   RawJobDetailStateSchema,
   RawLoadMoreResponseSchema,
   RawPositionDetailResponseSchema,
@@ -403,6 +405,30 @@ export class PageZhilianApiClient {
       });
     }
     return parsed.data;
+  }
+
+  /** 公司全部职位（fe-api 分页接口，可突破公司职位页首屏 20 条限制） */
+  async companyPositionList(
+    companyNumber: string,
+    opts: { pageIndex?: number; pageSize?: number } = {},
+  ): Promise<{ positions: RawPosition[]; count: number; isEndPage: boolean }> {
+    await this.ensureOrigin();
+    const { at, rt } = await this.getAtRt();
+    const pageIndex = opts.pageIndex ?? 1;
+    const pageSize = opts.pageSize ?? 100;
+    const json = await this.fetchJson(companyPositionsUrl(this.cfg.apiBase, companyNumber, pageIndex, pageSize, at, rt));
+    const parsed = RawCompanyPositionListSchema.safeParse(json);
+    if (!parsed.success || !okCode(parsed.data.code)) {
+      throw new ZhilianError('UPSTREAM_CHANGED', '公司职位接口返回异常');
+    }
+    const data = parsed.data.data;
+    if (!data) throw new ZhilianError('UPSTREAM_CHANGED', '公司职位接口返回空数据');
+    const isEnd = typeof data.isEndPage === 'boolean' ? data.isEndPage : Number(data.isEndPage ?? 0) === 1;
+    return {
+      positions: data.list,
+      count: data.count ?? data.list.length,
+      isEndPage: isEnd,
+    };
   }
 
   async getSearchBaseData(): Promise<unknown> {

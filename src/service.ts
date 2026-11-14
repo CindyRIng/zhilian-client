@@ -517,17 +517,53 @@ export class DefaultZhilianService implements ZhilianService {
   }
 
   async companyJobs(req: { companyNumber: string; page?: number; refresh?: boolean }): Promise<CompanyJobsResult> {
-    if (!req.refresh) {
+    // v2 缓存标记：旧版本只缓存首屏 20 条，遇到旧条目时忽略并重抓一次
+    const FULL_CACHE_MARKER = 'company_jobs_full_v1';
+    const cacheIsCurrent = this.cache.getMeta(FULL_CACHE_MARKER) === 'v1';
+    if (!req.refresh && cacheIsCurrent) {
       const cached = this.cache.getCompanyJobs(req.companyNumber, this.cfg.cache.companyJobsTtlSec);
       if (cached?.fresh) {
         return { companyNumber: req.companyNumber, jobCount: cached.value.length, jobs: cached.value, truncated: false };
       }
     }
     await this.session.ensureStarted();
-    const state = (await this.session.client().companyJobsPage(req.companyNumber, req.page ?? 1)) as RawCompanyJobsState;
-    const jobs = mapCompanyJobs(state.onlinePositions, this.cfg.baseUrl);
-    const jobCount = state.onlinePositionsCount ?? jobs.length;
-    const truncated = jobCount > jobs.length;
+    const client = this.session.client();
+
+    // 主路径：fe-api 公司职位分页接口（pageSize=100，循环到 count/isEndPage），可拿到 >20 条全量
+    let positions: Awaited<ReturnType<typeof client.companyPositionList>>['positions'] = [];
+    let jobCount = 0;
+    let complete = false;
+    try {
+      let pageIndex = 1;
+      let guard = 0;
+      while (guard < 10) {
+        const res = await client.companyPositionList(req.companyNumber, { pageIndex, pageSize: 100 });
+        if (pageIndex > 1) await client.pageDelayJitter();
+        positions = positions.concat(res.positions);
+        jobCount = Math.max(jobCount, res.count);
+        const reachedCount = jobCount > 0 && positions.length >= jobCount;
+        if (res.isEndPage || res.positions.length === 0 || reachedCount) {
+          complete = true;
+          break;
+        }
+        pageIndex += 1;
+        guard += 1;
+      }
+    } catch (err) {
+      this.logger?.warn('companyJobs.api.failed', { companyNumber: req.companyNumber, message: String(err) });
+    }
+
+    let jobs = mapCompanyJobs(positions, this.cfg.baseUrl);
+    if (!jobs.length) {
+      // 回退：SSR 公司职位页（首屏最多 20 条，可能触发 EdgeOne）
+      const state = (await client.companyJobsPage(req.companyNumber, req.page ?? 1)) as RawCompanyJobsState;
+      jobs = mapCompanyJobs(state.onlinePositions, this.cfg.baseUrl);
+      jobCount = state.onlinePositionsCount ?? jobs.length;
+      complete = jobCount <= jobs.length;
+    }
+    if (jobCount === 0) jobCount = jobs.length;
+    const truncated = !complete || jobCount > jobs.length;
+    this.cache.putMeta(FULL_CACHE_MARKER, 'v1');
     this.cache.putCompanyJobs(req.companyNumber, jobs);
     return { companyNumber: req.companyNumber, jobCount, jobs, truncated };
   }

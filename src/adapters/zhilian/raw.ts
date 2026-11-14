@@ -274,6 +274,25 @@ export const RawCompanyJobsStateSchema = z
 
 export type RawCompanyJobsState = z.infer<typeof RawCompanyJobsStateSchema>;
 
+export const RawCompanyPositionListSchema = z
+  .object({
+    code: z.union([z.number(), z.string()]),
+    apiCode: z.union([z.number(), z.string()]).optional(),
+    message: z.string().optional(),
+    data: z
+      .object({
+        count: z.number().optional(),
+        isEndPage: z.union([z.number(), z.boolean()]).optional(),
+        list: z.array(RawPositionSchema).default([]),
+        dataIdentity: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export type RawCompanyPositionList = z.infer<typeof RawCompanyPositionListSchema>;
+
 export const RawCheckTokenSchema = z.object({ code: z.union([z.number(), z.string()]), data: z.union([z.boolean(), z.unknown()]).optional() }).passthrough();
 
 export const RawUserDetailSchema = z

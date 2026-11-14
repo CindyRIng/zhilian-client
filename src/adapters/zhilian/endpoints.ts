@@ -18,6 +18,7 @@ export const ZHILIAN_ENDPOINTS = {
   userDetail: '/c/i/user/detail',
   refreshToken: '/c/i/refresh-token',
   searchPositions: '/c/i/search/positions',
+  companyPositions: '/c/i/company/search-position',
   positionDetail: '/c/i/jobs/position-detailv3',
   searchBaseData: '/c/i/search/base/data',
   regionRelation: '/c/datanormalization/region-relation',
@@ -76,6 +77,29 @@ export function userDetailUrl(apiBase: string): string {
 
 export function refreshTokenUrl(apiBase: string): string {
   return new URL('/c/i/refresh-token', apiBase).toString();
+}
+
+export function companyPositionsUrl(
+  apiBase: string,
+  companyNumber: string,
+  pageIndex: number,
+  pageSize: number,
+  at?: string,
+  rt?: string,
+): string {
+  const u = new URL('/c/i/company/search-position', apiBase);
+  u.searchParams.set('S_SOU_COMPANY_ID', companyNumber);
+  u.searchParams.set('pageSize', String(pageSize));
+  u.searchParams.set('pageIndex', String(pageIndex));
+  u.searchParams.set('S_SOU_SALARY_MIN', '');
+  u.searchParams.set('S_SOU_SALARY_MAX', '');
+  u.searchParams.set('S_SOU_WORK_CITY', '');
+  u.searchParams.set('S_SOU_JD_JOB_LEVEL', '');
+  if (at) u.searchParams.set('at', at);
+  if (rt) u.searchParams.set('rt', rt);
+  u.searchParams.set('platform', '13');
+  u.searchParams.set('version', '0.0.0');
+  return u.toString();
 }
 
 export function searchPositionsUrl(apiBase: string): string {
