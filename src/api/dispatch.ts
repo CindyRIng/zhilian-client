@@ -50,7 +50,7 @@ async function invokeInner(service: ZhilianService, operationId: string, input: 
       const r = await service.searchJobs(body as SearchJobsRequest);
       const warnings: string[] = [];
       if (r.query.anonymous) warnings.push('anonymous_limited');
-      return { data: r, pagination: r.pagination, cached: false, mode, warnings };
+      return { data: r, pagination: r.pagination, cached: r.cached, mode, warnings };
     }
     case 'jobs.list': {
       const r = await service.listJobs({
@@ -59,7 +59,7 @@ async function invokeInner(service: ZhilianService, operationId: string, input: 
         ...(query.pageSize !== undefined ? { pageSize: Number(query.pageSize) } : {}),
         refresh: asBool(query.refresh),
       });
-      return { data: r, pagination: r.pagination, cached: false, mode };
+      return { data: r, pagination: r.pagination, cached: r.cached, mode };
     }
     case 'jobs.detail':
       return {
@@ -77,7 +77,7 @@ async function invokeInner(service: ZhilianService, operationId: string, input: 
         fetchPages: Number(query.fetchPages ?? 0),
         refresh: asBool(query.refresh),
       });
-      return { data: r, pagination: r.pagination, cached: false, mode };
+      return { data: r, pagination: r.pagination, cached: r.cached, mode };
     }
     case 'companies.detail':
       return { data: await service.companyDetail({ companyNumber: pathParams.companyNumber ?? '', refresh: asBool(query.refresh) }), mode };

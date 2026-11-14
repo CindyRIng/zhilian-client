@@ -48,18 +48,21 @@ export interface SearchJobsResult {
   jobs: JobSummary[];
   companies: CompanySummary[];
   pagination: Pagination;
+  cached: boolean;
 }
 
 export interface JobsResult {
   query: ReturnType<typeof queryToPublic>;
   jobs: JobSummary[];
   pagination: Pagination;
+  cached: boolean;
 }
 
 export interface CompaniesResult {
   query: ReturnType<typeof queryToPublic>;
   companies: CompanySummary[];
   pagination: Pagination;
+  cached: boolean;
 }
 
 export interface CitiesResponse {
@@ -266,6 +269,7 @@ export class DefaultZhilianService implements ZhilianService {
           query: queryToPublic(existing),
           jobs,
           companies: buildCompanySummaries(jobs),
+          cached: true,
           pagination: {
             page: startPage,
             pageSize,
@@ -335,6 +339,7 @@ export class DefaultZhilianService implements ZhilianService {
       query: queryToPublic(record),
       jobs: uniqueJobs,
       companies,
+      cached: false,
       pagination: {
         page: startPage,
         pageSize,
@@ -356,6 +361,7 @@ export class DefaultZhilianService implements ZhilianService {
     }
     const client = this.session.client();
     let cached = this.cache.getJobPage(req.queryId, req.page, this.cfg.cache.listTtlSec);
+    const fromCache = Boolean(cached?.fresh) && !req.refresh;
     if (!cached?.fresh || req.refresh) {
       if (req.page === 1) {
         const res = await client.searchPage({ keyword: record.keyword, cityCode: record.cityCode, page: 1, sortType: record.sortType });
@@ -388,6 +394,7 @@ export class DefaultZhilianService implements ZhilianService {
     return {
       query: queryToPublic(updated),
       jobs: cached!.value,
+      cached: fromCache,
       pagination: {
         page: req.page,
         pageSize,
@@ -485,6 +492,7 @@ export class DefaultZhilianService implements ZhilianService {
     return {
       query: queryToPublic(record),
       companies,
+      cached: true,
       pagination: {
         page: req.page,
         pageSize: req.pageSize,
