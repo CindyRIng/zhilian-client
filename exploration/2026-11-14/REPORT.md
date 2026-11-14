@@ -435,3 +435,37 @@ GET https://fe-api.zhaopin.com/c/i/jobs/position-detailv3?number=<positionNumber
 - `positionList[i].jobDetailData.staff` 含招聘者姓名/头像/在线态（登录后更全）。
 - 公司详情页登录后仍为 SSR，工商信息不变。
 - 会话安全：`at`/`rt` 均为非 HttpOnly cookie（前端可读），因此客户端可在页面内读取并用于 API 请求头/参数；写入文档/日志时必须脱敏。
+
+
+---
+
+## 17. 实现与联调（2026-11-14 20:30–20:55）
+
+> 代码：`src/` 全量实现（对标 boss-client 骨架，智联适配层重写）；build/test/gen 均通过；systemd user 服务已常驻 `127.0.0.1:8791`。
+
+### 17.1 联调结果（真实账号 + 真实上游）
+
+| 操作 | 结果 |
+| --- | --- |
+| `/v1/health` | 200；轻量快照（不请求上游），~6ms |
+| `/v1/status` | 200；`loggedIn=true / mode=logged_in / health=ok`；at≈7d、rt≈30d |
+| `POST /v1/search/jobs`（外贸/565/pages=1） | 200；20 jobs / 20 companies / queryId；缓存命中可复现 |
+| `POST /v1/search/jobs`（pages=2） | 200；40 jobs / 37 companies；load-more API 生效，`count=1000` |
+| `GET /v1/jobs?...&page=2` | 200；20 jobs；`pagesFetched=2` |
+| `GET /v1/jobs/<positionNumber>` | 200；`position-detailv3` 直取，描述/薪资/招聘者/公司齐全 |
+| `GET /v1/companies/<companyNumber>` | 首次触发 EdgeOne → `verification` 中继（headless 自动点击）→ 重试 200；含工商信息（USCC/法人/注册资本/经营范围） |
+| `GET /v1/companies/<companyNumber>/jobs` | 200；`jobCount=21`、20 条、`truncated=true` |
+| `GET /v1/cities` | 200；461 个城市（含直辖市 530 北京；565 石家庄默认） |
+| `GET /v1/cache/stats` | 200；queries/jobs/companies 等 entries 正常 |
+| `/openapi.json` / `/docs` / `/mcp-tools.json` | 16 paths / 73 schemas；HTML 161KB；17 tools |
+| MCP stdio | `initialize` / `tools/list`(17) / `tools/call`(`zhilian_status`) 均通过 |
+
+### 17.2 实现期发现的额外事实
+
+1. **EdgeOne 也保护公司页**：`/companydetail/*`、`/companydetail/jobs-*` 的文档 `fetch` 会先返回 JS 挑战脚本（写 `EO_Bot_Ssid` / `__tst_status` 后重载），风控升级时会变成勾选框挑战；客户端策略：真实页面导航执行挑战 → 需要时 `verification` 中继 → 重试。
+2. **headless 可过 EdgeOne**：headless 下 `verification.solve {kind:"edgeone",auto:true}` 点击 iframe 内 `#verifyCheckbox` 实测通过，token 续期 30 天。
+3. **load-more 请求依赖登录态**：body 需要 `at`/`rt`/`resumeNumber`，登录后翻页正常；匿名模式仍只 1 页 20 条。
+4. **公司职位页仍只返回首屏 20 条**：`onlinePositionsCount=21` 而 `onlinePositions=20`；v1 以 `truncated=true` 表达。
+5. **搜索 `count=1000`**：load-more 响应中的 `data.count` 为上游结果上限，`pagesAvailable` 由客户端按 count/pageSize 推导（50）。
+6. **`/v1/health` 必须轻量**：最初实现里 health 调用了 `status`（两次上游请求）导致 CLI 自动探测超时并误启动本地 App（`ALREADY_RUNNING`）；改为纯本地快照后修复。
+7. **CLI 终端二维码**：上游二维码是 JPEG，pngjs 无法解码；CLI 改为保存文件 + 打印路径，REST 仍返回 Base64。

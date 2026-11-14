@@ -1,0 +1,361 @@
+{
+  "operationId": "cities.list",
+  "summary": "城市注册表",
+  "auth": "bearer",
+  "rest": {
+    "method": "GET",
+    "path": "/v1/cities",
+    "query": {
+      "def": {
+        "type": "object",
+        "shape": {
+          "refresh": {
+            "def": {
+              "type": "default",
+              "innerType": {
+                "def": {
+                  "type": "pipe",
+                  "in": {
+                    "def": {
+                      "type": "union",
+                      "options": [
+                        {
+                          "def": {
+                            "type": "boolean"
+                          },
+                          "type": "boolean"
+                        },
+                        {
+                          "def": {
+                            "type": "enum",
+                            "entries": {
+                              "true": "true",
+                              "false": "false"
+                            }
+                          },
+                          "type": "enum",
+                          "enum": {
+                            "true": "true",
+                            "false": "false"
+                          },
+                          "options": [
+                            "true",
+                            "false"
+                          ]
+                        }
+                      ]
+                    },
+                    "type": "union",
+                    "options": [
+                      {
+                        "def": {
+                          "type": "boolean"
+                        },
+                        "type": "boolean"
+                      },
+                      {
+                        "def": {
+                          "type": "enum",
+                          "entries": {
+                            "true": "true",
+                            "false": "false"
+                          }
+                        },
+                        "type": "enum",
+                        "enum": {
+                          "true": "true",
+                          "false": "false"
+                        },
+                        "options": [
+                          "true",
+                          "false"
+                        ]
+                      }
+                    ]
+                  },
+                  "out": {
+                    "def": {
+                      "type": "transform"
+                    },
+                    "type": "transform"
+                  }
+                },
+                "type": "pipe",
+                "in": {
+                  "def": {
+                    "type": "union",
+                    "options": [
+                      {
+                        "def": {
+                          "type": "boolean"
+                        },
+                        "type": "boolean"
+                      },
+                      {
+                        "def": {
+                          "type": "enum",
+                          "entries": {
+                            "true": "true",
+                            "false": "false"
+                          }
+                        },
+                        "type": "enum",
+                        "enum": {
+                          "true": "true",
+                          "false": "false"
+                        },
+                        "options": [
+                          "true",
+                          "false"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "union",
+                  "options": [
+                    {
+                      "def": {
+                        "type": "boolean"
+                      },
+                      "type": "boolean"
+                    },
+                    {
+                      "def": {
+                        "type": "enum",
+                        "entries": {
+                          "true": "true",
+                          "false": "false"
+                        }
+                      },
+                      "type": "enum",
+                      "enum": {
+                        "true": "true",
+                        "false": "false"
+                      },
+                      "options": [
+                        "true",
+                        "false"
+                      ]
+                    }
+                  ]
+                },
+                "out": {
+                  "def": {
+                    "type": "transform"
+                  },
+                  "type": "transform"
+                }
+              },
+              "defaultValue": false
+            },
+            "type": "default"
+          },
+          "level": {
+            "def": {
+              "type": "optional",
+              "innerType": {
+                "def": {
+                  "type": "enum",
+                  "entries": {
+                    "country": "country",
+                    "province": "province",
+                    "city": "city",
+                    "district": "district"
+                  }
+                },
+                "type": "enum",
+                "enum": {
+                  "country": "country",
+                  "province": "province",
+                  "city": "city",
+                  "district": "district"
+                },
+                "options": [
+                  "country",
+                  "province",
+                  "city",
+                  "district"
+                ]
+              }
+            },
+            "type": "optional"
+          }
+        }
+      },
+      "type": "object"
+    }
+  },
+  "cli": {
+    "command": "cities list",
+    "description": "城市注册表",
+    "example": "zhilian cities list --refresh"
+  },
+  "mcp": {
+    "name": "zhilian_cities",
+    "description": "城市注册表"
+  },
+  "input": {
+    "type": "object",
+    "properties": {
+      "refresh": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "string",
+            "enum": [
+              "true",
+              "false"
+            ]
+          }
+        ]
+      },
+      "level": {
+        "type": "string",
+        "enum": [
+          "country",
+          "province",
+          "city",
+          "district"
+        ]
+      }
+    },
+    "$defs": {
+      "CitiesQuery": {
+        "type": "object",
+        "properties": {
+          "refresh": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "true",
+                  "false"
+                ]
+              }
+            ]
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "country",
+              "province",
+              "city",
+              "district"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "cities": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "enName": {
+              "type": "string"
+            },
+            "province": {
+              "type": "string"
+            },
+            "level": {
+              "type": "string",
+              "enum": [
+                "country",
+                "province",
+                "city",
+                "district"
+              ]
+            },
+            "isDefault": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "code",
+            "name",
+            "level",
+            "isDefault"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "cities",
+      "updatedAt"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "CitiesResponse": {
+        "type": "object",
+        "properties": {
+          "cities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "enName": {
+                  "type": "string"
+                },
+                "province": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "country",
+                    "province",
+                    "city",
+                    "district"
+                  ]
+                },
+                "isDefault": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "code",
+                "name",
+                "level",
+                "isDefault"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cities",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

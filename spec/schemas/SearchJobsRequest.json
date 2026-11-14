@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "properties": {
+    "keyword": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cityCode": {
+      "$ref": "#/$defs/CityCode"
+    },
+    "page": {
+      "default": 1,
+      "description": "页码，从 1 开始",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "pages": {
+      "default": 1,
+      "description": "本次抓取页数，1-5",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "order": {
+      "default": 4,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "sortType": {
+      "$ref": "#/$defs/SortType"
+    },
+    "refresh": {
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "keyword",
+    "page",
+    "pages",
+    "order",
+    "refresh"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "SearchJobsRequest": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cityCode": {
+          "$ref": "#/$defs/CityCode"
+        },
+        "page": {
+          "default": 1,
+          "description": "页码，从 1 开始",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "pages": {
+          "default": 1,
+          "description": "本次抓取页数，1-5",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "order": {
+          "default": 4,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "sortType": {
+          "$ref": "#/$defs/SortType"
+        },
+        "refresh": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "keyword",
+        "page",
+        "pages",
+        "order",
+        "refresh"
+      ],
+      "additionalProperties": false
+    },
+    "CityCode": {
+      "type": "string",
+      "pattern": "^\\d{1,6}$",
+      "description": "智联城市码（jl），如 565=石家庄、489=全国"
+    },
+    "SortType": {
+      "type": "string",
+      "enum": [
+        "DEFAULT",
+        "HR_ACTIVE_TIME",
+        "JOB_PUBLISH_TIME"
+      ],
+      "description": "搜索排序：DEFAULT 智能排序 / HR_ACTIVE_TIME / JOB_PUBLISH_TIME"
+    }
+  }
+}

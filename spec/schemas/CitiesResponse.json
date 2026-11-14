@@ -1,0 +1,106 @@
+{
+  "type": "object",
+  "properties": {
+    "cities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "enName": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "country",
+              "province",
+              "city",
+              "district"
+            ]
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "level",
+          "isDefault"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "cities",
+    "updatedAt"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "CitiesResponse": {
+      "type": "object",
+      "properties": {
+        "cities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "enName": {
+                "type": "string"
+              },
+              "province": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "country",
+                  "province",
+                  "city",
+                  "district"
+                ]
+              },
+              "isDefault": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "name",
+              "level",
+              "isDefault"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cities",
+        "updatedAt"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

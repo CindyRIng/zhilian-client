@@ -1,0 +1,557 @@
+{
+  "operationId": "jobs.detail",
+  "summary": "职位详情",
+  "auth": "bearer",
+  "rest": {
+    "method": "GET",
+    "path": "/v1/jobs/{positionNumber}",
+    "pathParams": {
+      "def": {
+        "type": "object",
+        "shape": {
+          "positionNumber": {
+            "def": {
+              "type": "string",
+              "checks": [
+                {}
+              ]
+            },
+            "type": "string"
+          }
+        }
+      },
+      "type": "object"
+    },
+    "query": {
+      "def": {
+        "type": "object",
+        "shape": {
+          "refresh": {
+            "def": {
+              "type": "default",
+              "innerType": {
+                "def": {
+                  "type": "pipe",
+                  "in": {
+                    "def": {
+                      "type": "union",
+                      "options": [
+                        {
+                          "def": {
+                            "type": "boolean"
+                          },
+                          "type": "boolean"
+                        },
+                        {
+                          "def": {
+                            "type": "enum",
+                            "entries": {
+                              "true": "true",
+                              "false": "false"
+                            }
+                          },
+                          "type": "enum",
+                          "enum": {
+                            "true": "true",
+                            "false": "false"
+                          },
+                          "options": [
+                            "true",
+                            "false"
+                          ]
+                        }
+                      ]
+                    },
+                    "type": "union",
+                    "options": [
+                      {
+                        "def": {
+                          "type": "boolean"
+                        },
+                        "type": "boolean"
+                      },
+                      {
+                        "def": {
+                          "type": "enum",
+                          "entries": {
+                            "true": "true",
+                            "false": "false"
+                          }
+                        },
+                        "type": "enum",
+                        "enum": {
+                          "true": "true",
+                          "false": "false"
+                        },
+                        "options": [
+                          "true",
+                          "false"
+                        ]
+                      }
+                    ]
+                  },
+                  "out": {
+                    "def": {
+                      "type": "transform"
+                    },
+                    "type": "transform"
+                  }
+                },
+                "type": "pipe",
+                "in": {
+                  "def": {
+                    "type": "union",
+                    "options": [
+                      {
+                        "def": {
+                          "type": "boolean"
+                        },
+                        "type": "boolean"
+                      },
+                      {
+                        "def": {
+                          "type": "enum",
+                          "entries": {
+                            "true": "true",
+                            "false": "false"
+                          }
+                        },
+                        "type": "enum",
+                        "enum": {
+                          "true": "true",
+                          "false": "false"
+                        },
+                        "options": [
+                          "true",
+                          "false"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "union",
+                  "options": [
+                    {
+                      "def": {
+                        "type": "boolean"
+                      },
+                      "type": "boolean"
+                    },
+                    {
+                      "def": {
+                        "type": "enum",
+                        "entries": {
+                          "true": "true",
+                          "false": "false"
+                        }
+                      },
+                      "type": "enum",
+                      "enum": {
+                        "true": "true",
+                        "false": "false"
+                      },
+                      "options": [
+                        "true",
+                        "false"
+                      ]
+                    }
+                  ]
+                },
+                "out": {
+                  "def": {
+                    "type": "transform"
+                  },
+                  "type": "transform"
+                }
+              },
+              "defaultValue": false
+            },
+            "type": "default"
+          }
+        }
+      },
+      "type": "object"
+    }
+  },
+  "cli": {
+    "command": "jobs detail",
+    "description": "职位详情",
+    "example": "zhilian jobs detail --number CCL1316344860J40974823208"
+  },
+  "mcp": {
+    "name": "zhilian_job_detail",
+    "description": "职位详情"
+  },
+  "input": {
+    "type": "object",
+    "properties": {
+      "positionNumber": {
+        "$ref": "#/$defs/PositionNumber"
+      },
+      "refresh": {
+        "default": false,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "positionNumber"
+    ],
+    "$defs": {
+      "PositionNumber": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_~.-]{6,80}$",
+        "description": "智联职位号（CCL…J…），用于 /jobdetail/<number>.htm 与 position-detailv3"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "positionNumber": {
+        "$ref": "#/$defs/PositionNumber"
+      },
+      "jobId": {
+        "type": "number"
+      },
+      "title": {
+        "type": "string"
+      },
+      "salaryText": {
+        "default": "",
+        "type": "string"
+      },
+      "salaryMin": {
+        "type": "number",
+        "minimum": 0
+      },
+      "salaryMax": {
+        "type": "number",
+        "minimum": 0
+      },
+      "salaryType": {
+        "type": "number"
+      },
+      "education": {
+        "default": "",
+        "type": "string"
+      },
+      "experience": {
+        "default": "",
+        "type": "string"
+      },
+      "workType": {
+        "type": "string"
+      },
+      "cityCode": {
+        "$ref": "#/$defs/CityCode"
+      },
+      "cityName": {
+        "type": "string"
+      },
+      "district": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      },
+      "latitude": {
+        "type": "number"
+      },
+      "longitude": {
+        "type": "number"
+      },
+      "description": {
+        "default": "",
+        "type": "string"
+      },
+      "labels": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "welfareTags": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "publishTime": {
+        "$ref": "#/$defs/IsoDateTime"
+      },
+      "recruiter": {
+        "default": {},
+        "$ref": "#/$defs/Recruiter"
+      },
+      "company": {
+        "default": {},
+        "$ref": "#/$defs/JobCompany"
+      },
+      "business": {
+        "$ref": "#/$defs/BusinessInfo"
+      },
+      "jobUrl": {
+        "type": "string",
+        "format": "uri"
+      },
+      "fetchedAt": {
+        "$ref": "#/$defs/IsoDateTime"
+      }
+    },
+    "required": [
+      "positionNumber",
+      "title",
+      "salaryText",
+      "education",
+      "experience",
+      "description",
+      "labels",
+      "welfareTags",
+      "recruiter",
+      "company",
+      "jobUrl",
+      "fetchedAt"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "JobDetail": {
+        "type": "object",
+        "properties": {
+          "positionNumber": {
+            "$ref": "#/$defs/PositionNumber"
+          },
+          "jobId": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "salaryText": {
+            "default": "",
+            "type": "string"
+          },
+          "salaryMin": {
+            "type": "number",
+            "minimum": 0
+          },
+          "salaryMax": {
+            "type": "number",
+            "minimum": 0
+          },
+          "salaryType": {
+            "type": "number"
+          },
+          "education": {
+            "default": "",
+            "type": "string"
+          },
+          "experience": {
+            "default": "",
+            "type": "string"
+          },
+          "workType": {
+            "type": "string"
+          },
+          "cityCode": {
+            "$ref": "#/$defs/CityCode"
+          },
+          "cityName": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "labels": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "welfareTags": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publishTime": {
+            "$ref": "#/$defs/IsoDateTime"
+          },
+          "recruiter": {
+            "default": {},
+            "$ref": "#/$defs/Recruiter"
+          },
+          "company": {
+            "default": {},
+            "$ref": "#/$defs/JobCompany"
+          },
+          "business": {
+            "$ref": "#/$defs/BusinessInfo"
+          },
+          "jobUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "fetchedAt": {
+            "$ref": "#/$defs/IsoDateTime"
+          }
+        },
+        "required": [
+          "positionNumber",
+          "title",
+          "salaryText",
+          "education",
+          "experience",
+          "description",
+          "labels",
+          "welfareTags",
+          "recruiter",
+          "company",
+          "jobUrl",
+          "fetchedAt"
+        ],
+        "additionalProperties": false
+      },
+      "PositionNumber": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_~.-]{6,80}$",
+        "description": "智联职位号（CCL…J…），用于 /jobdetail/<number>.htm 与 position-detailv3"
+      },
+      "CityCode": {
+        "type": "string",
+        "pattern": "^\\d{1,6}$",
+        "description": "智联城市码（jl），如 565=石家庄、489=全国"
+      },
+      "IsoDateTime": {
+        "type": "string",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?(?:Z|[+-]\\d{2}:\\d{2})$",
+        "description": "ISO-8601 日期时间（含时区）"
+      },
+      "Recruiter": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "JobCompany": {
+        "type": "object",
+        "properties": {
+          "companyNumber": {
+            "$ref": "#/$defs/CompanyNumber"
+          },
+          "name": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "financingStage": {
+            "type": "string"
+          },
+          "logo": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompanyNumber": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_~.-]{4,160}$",
+        "description": "智联公司号（CZL…/CZ…/CC…），用于 /companydetail/<number>.htm"
+      },
+      "BusinessInfo": {
+        "type": "object",
+        "properties": {
+          "registeredName": {
+            "type": "string"
+          },
+          "uscc": {
+            "description": "统一社会信用代码（epCertNo）",
+            "type": "string"
+          },
+          "legalPerson": {
+            "type": "string"
+          },
+          "registeredCapital": {
+            "type": "string"
+          },
+          "companyType": {
+            "type": "string"
+          },
+          "businessStatus": {
+            "type": "string"
+          },
+          "createDate": {
+            "type": "string"
+          },
+          "registeredOrg": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "registeredAddress": {
+            "type": "string"
+          },
+          "businessScope": {
+            "type": "string"
+          },
+          "businessPeriod": {
+            "type": "string"
+          },
+          "creditLevel": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          },
+          "textDerived": {
+            "default": true,
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "textDerived"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

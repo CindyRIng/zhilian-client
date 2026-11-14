@@ -5,3 +5,4 @@ dist/
 exploration/**/artifacts/
 exploration/**/controller.mjs.tmp
 .DS_Store
+.tmp/

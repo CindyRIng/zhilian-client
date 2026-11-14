@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0",
+  "commands": [
+    {
+      "command": "zhilian health",
+      "description": "健康检查",
+      "example": "zhilian health",
+      "operationId": "health.get"
+    },
+    {
+      "command": "zhilian status",
+      "description": "查看登录态、会话剩余、EdgeOne、风控冷却、缓存",
+      "example": "zhilian status",
+      "operationId": "status.get"
+    },
+    {
+      "command": "zhilian login start",
+      "description": "开始登录（默认智联 APP 扫码；--sms 短信）",
+      "example": "zhilian login --qr",
+      "operationId": "session.login.start"
+    },
+    {
+      "command": "zhilian login status",
+      "description": "查询 loginId 状态",
+      "example": "zhilian login status login_xxx",
+      "operationId": "session.login.get"
+    },
+    {
+      "command": "zhilian login sms",
+      "description": "提交短信验证码",
+      "example": "zhilian login sms login_xxx --code 123456",
+      "operationId": "session.login.sms"
+    },
+    {
+      "command": "zhilian login cancel",
+      "description": "取消登录流程",
+      "example": "zhilian login cancel login_xxx",
+      "operationId": "session.login.cancel"
+    },
+    {
+      "command": "zhilian verify status",
+      "description": "查询待处理人机验证",
+      "example": "zhilian verify status",
+      "operationId": "verification.get"
+    },
+    {
+      "command": "zhilian verify solve",
+      "description": "提交人机验证（edgeone auto/points；geetest points/offset）",
+      "example": "zhilian verify solve --kind edgeone --auto",
+      "operationId": "verification.solve"
+    },
+    {
+      "command": "zhilian search jobs",
+      "description": "职位搜索",
+      "example": "zhilian search jobs --keyword 外贸 --city 565 --pages 1",
+      "operationId": "search.jobs"
+    },
+    {
+      "command": "zhilian jobs list",
+      "description": "按 queryId 翻页",
+      "example": "zhilian jobs list --query-id q_20261114_ab12cd --page 2",
+      "operationId": "jobs.list"
+    },
+    {
+      "command": "zhilian jobs detail",
+      "description": "职位详情",
+      "example": "zhilian jobs detail --number CCL1316344860J40974823208",
+      "operationId": "jobs.detail"
+    },
+    {
+      "command": "zhilian companies list",
+      "description": "去重公司列表",
+      "example": "zhilian companies list --query-id q_20261114_ab12cd",
+      "operationId": "companies.list"
+    },
+    {
+      "command": "zhilian companies detail",
+      "description": "公司详情（含工商信息）",
+      "example": "zhilian companies detail --number CZL1515276460",
+      "operationId": "companies.detail"
+    },
+    {
+      "command": "zhilian companies jobs",
+      "description": "公司全部在招职位",
+      "example": "zhilian companies jobs --number CZL1515276460",
+      "operationId": "companies.jobs"
+    },
+    {
+      "command": "zhilian cities list",
+      "description": "城市注册表",
+      "example": "zhilian cities list --refresh",
+      "operationId": "cities.list"
+    },
+    {
+      "command": "zhilian cache stats",
+      "description": "缓存统计",
+      "example": "zhilian cache stats",
+      "operationId": "cache.stats"
+    },
+    {
+      "command": "zhilian cache clear",
+      "description": "清缓存",
+      "example": "zhilian cache clear --all",
+      "operationId": "cache.clear"
+    }
+  ]
+}

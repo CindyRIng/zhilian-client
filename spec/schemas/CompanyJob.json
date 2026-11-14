@@ -1,0 +1,111 @@
+{
+  "type": "object",
+  "properties": {
+    "positionNumber": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "salaryText": {
+      "default": "",
+      "type": "string"
+    },
+    "salaryMin": {
+      "type": "number",
+      "minimum": 0
+    },
+    "salaryMax": {
+      "type": "number",
+      "minimum": 0
+    },
+    "education": {
+      "type": "string"
+    },
+    "experience": {
+      "type": "string"
+    },
+    "cityName": {
+      "type": "string"
+    },
+    "district": {
+      "type": "string"
+    },
+    "publishTime": {
+      "$ref": "#/$defs/IsoDateTime"
+    },
+    "recruiterName": {
+      "type": "string"
+    },
+    "jobUrl": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "positionNumber",
+    "title",
+    "salaryText",
+    "jobUrl"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "CompanyJob": {
+      "type": "object",
+      "properties": {
+        "positionNumber": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "salaryText": {
+          "default": "",
+          "type": "string"
+        },
+        "salaryMin": {
+          "type": "number",
+          "minimum": 0
+        },
+        "salaryMax": {
+          "type": "number",
+          "minimum": 0
+        },
+        "education": {
+          "type": "string"
+        },
+        "experience": {
+          "type": "string"
+        },
+        "cityName": {
+          "type": "string"
+        },
+        "district": {
+          "type": "string"
+        },
+        "publishTime": {
+          "$ref": "#/$defs/IsoDateTime"
+        },
+        "recruiterName": {
+          "type": "string"
+        },
+        "jobUrl": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "positionNumber",
+        "title",
+        "salaryText",
+        "jobUrl"
+      ],
+      "additionalProperties": false
+    },
+    "IsoDateTime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?(?:Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO-8601 日期时间（含时区）"
+    }
+  }
+}

@@ -6,7 +6,11 @@
 
 ## 状态
 
-**文档阶段（v0.1）**——2026-11-14 已完成匿名链路 + 真实账号登录/会话续期实测（短信验证码登录成功；会话 token `at`≈7 天 / `rt`≈30 天；profile 复用免登录；搜索第 2 页起走 load-more API）。当前仓库只包含探路产物与设计文档，**尚未进入实现**。
+**v0.1 已实现并本机运行**（2026-11-14）——匿名链路 + 真实账号登录/会话续期已实测；CLI / REST / MCP 三通道已联调通过；`zhilian-client.service` 以 systemd user 常驻在 `http://127.0.0.1:8791`（REST + `/docs` + `/openapi.json`）。
+
+- 运行状态：`systemctl --user status zhilian-client`；日志 `journalctl --user -u zhilian-client`
+- 接口文档：`http://127.0.0.1:8791/docs`（自包含 HTML）、`http://127.0.0.1:8791/openapi.json`
+- 认证：REST 除 `/v1/health` 外需要 `Authorization: Bearer <ZHILIAN_API_TOKEN>`（见本机 `.env`，600 权限）
 
 - PRD：[docs/01-需求文档.md](docs/01-需求文档.md)
 - 接口草案：[docs/02-接口草案.md](docs/02-接口草案.md)
@@ -15,7 +19,7 @@
 - 部署与使用：[docs/03-部署与使用.md](docs/03-部署与使用.md)
 - 环境配套：[docs/04-环境配套.md](docs/04-环境配套.md)
 
-## 能力（规划 v1）
+## 能力（v0.1 已实现）
 
 | 能力 | CLI | REST | MCP |
 | --- | --- | --- | --- |
@@ -58,13 +62,13 @@ flowchart TB
 - **采集最小化**：页面内 `fetch` SSR 文档并解析 `__INITIAL_STATE__`；详情优先 `position-detailv3` API，尽量不加载完整页面与子资源。
 - **人机验证**：EdgeOne（30 天 token）与登录 NC/极验均支持「中继（截图+坐标）/自动点击」。
 
-## 快速开始（规划）
+## 快速开始
 
 ```bash
 # 前置：~/cloak-env 可用
 ~/cloak-env/bin/cloak-env-info
 
-# 安装（实现阶段）
+# 安装
 npm install
 cp .env.example .env         # 至少修改 ZHILIAN_API_TOKEN
 npm run build
@@ -78,9 +82,34 @@ zhilian login --sms          # 短信（需 headful）
 # 查询
 zhilian status
 zhilian search jobs --keyword 外贸 --city 565 --pages 1
+zhilian jobs detail --number CCL1316344860J40974823208
 zhilian companies list --query-id q_...
 zhilian companies detail --number CZL...
+zhilian companies jobs --number CZL...
+zhilian cities list
 ```
+
+## 服务与运维
+
+```bash
+# 安装为 systemd user 服务（已在本机完成）
+mkdir -p ~/.config/systemd/user
+cp systemd/zhilian-client.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now zhilian-client
+
+# 本机 CLI
+ln -sf "$PWD/bin/zhilian-run" ~/.local/bin/zhilian
+zhilian status
+
+# MCP（默认代理到常驻 REST，不打开第二个浏览器）
+# MCP 客户端配置：
+#   command: /path/to/zhilian-client/bin/zhilian-run
+#   args: ["mcp"]
+#   env: { ZHILIAN_CLIENT_URL: "http://127.0.0.1:8791", ZHILIAN_API_TOKEN: "<token>" }
+```
+
+> **人机验证**：智联的 EdgeOne 可能拦截 `/companydetail/*`、`/jobdetail/*` 等页面。客户端会返回 `HUMAN_VERIFICATION_REQUIRED` 并在 `GET /v1/verification` 暴露截图/iframe/复选框信息；`POST /v1/verification/solve {"kind":"edgeone","auto":true}`（或人工点击坐标）通过后即可重试。默认 `ZHILIAN_EDGE_AUTO=false`（中继优先，可用 `zhilian verify solve --kind edgeone --auto` 手动自动过）。
 
 ## 文档
 

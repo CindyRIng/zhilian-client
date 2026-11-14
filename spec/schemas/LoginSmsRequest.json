@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^\\d{4,8}$"
+    }
+  },
+  "required": [
+    "code"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "LoginSmsRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^\\d{4,8}$"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
