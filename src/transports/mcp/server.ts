@@ -46,7 +46,7 @@ function argsToInvocation(operationId: string, args: Record<string, unknown>): I
 }
 
 export function createMcpServer(backend: Backend): Server {
-  const server = new Server({ name: 'zhilian-client', version: '0.1.0' }, { capabilities: { tools: {} } });
+  const server = new Server({ name: 'zhilian-client', version: '0.1.1' }, { capabilities: { tools: {} } });
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: mcpTools().map((t) => ({ name: t.name, description: t.description, inputSchema: toJsonSchema(t.input) })),
   }));

@@ -32,7 +32,7 @@ import type { RawCompanyDetailState, RawCompanyJobsState, RawJobDetailState } fr
 import { CITY_SEED, filterCities, type CitySeed } from './data/cities.js';
 import { SCHEMA_VERSION } from './schemas/envelope.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.1.1';
 
 export interface Pagination {
   page: number;

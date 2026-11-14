@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "zhilian-client API",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "智联招聘本地只读客户端 REST API：职位搜索、职位详情、公司列表、公司详情（含工商信息）、公司全部职位、状态、登录中继与 EdgeOne 人机验证中继。",
     "license": {
       "name": "MIT",

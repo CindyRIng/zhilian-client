@@ -17,7 +17,7 @@ import type { LoginSession, VerificationSolveRequest } from '../../domain/login.
 import type { ZhilianService } from '../../service.js';
 import { renderQrTerminal } from './qr.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 let backend: Backend | null = null;
 
 async function getBackend(opts: { local?: boolean; url?: string } = {}): Promise<Backend> {
