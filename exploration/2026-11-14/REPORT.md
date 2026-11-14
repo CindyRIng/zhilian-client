@@ -228,9 +228,9 @@ GET https://fe-api.zhaopin.com/c/i/jobs/position-detailv3?number=<positionNumber
 
 ---
 
-## 9. 会话与自动登录（PENDING）
+## 9. 会话与自动登录（已补测，见 §16）
 
-待人工扫码后补全：
+~~待人工扫码后补全~~（2026-11-14 20:03 已用短信验证码真实登录，详见 §16）：
 
 1. 登录成功写入的 cookie 清单、domain、有效期、HttpOnly/Secure（重点：token cookie、`EO-Bot-Captcha-Token`、设备指纹）
 2. `localStorage` / `sessionStorage` 中 token 键值（长度/键名，不记录 value）
@@ -309,3 +309,129 @@ GET https://fe-api.zhaopin.com/c/i/jobs/position-detailv3?number=<positionNumber
 5. `rememberMe=true` 是否带来长期免登录/续期；profile 重启复用。
 6. 静默刷新/续期接口（网络请求中观察）。
 7. 公司全部职位页大公司分页参数与截断规则。
+
+
+---
+
+## 16. 登录后补测（2026-11-14 20:03–20:12，真实账号）
+
+> 登录方式：短信验证码（手机号已脱敏为 `156****0075`）；`rememberMe=true` 由页面在登录请求中固定携带。
+> 说明：本节所有 token 值均不落库、不写入文档；仅记录机制、端点、字段名与 TTL。
+
+### 16.1 短信登录请求链（实测）
+
+```text
+1) POST https://passport.zhaopin.com/common/getEncryptKey?time=<ts>
+   → data.encryptKey = RSA 公钥（后续 encryptMobile 用）
+
+2) GET https://passport.zhaopin.com/passportService/verify/init?scene=10000020&countryCode=86
+      &mobile=<加密后手机号>&encryptMobile=<...>&encryptRequestId=<uuid>&sessionId=&...
+   → {"code":100000,"data":{"riskLevel":3,"validateId":"<id>","needVerify":true,
+        "sessionId":"<sid>","geetestData":{"success":true,"challenge":"<...>","gt":"<...>"}}}
+   （本次 geetestData.success=true，页面自动完成极验，无人工交互）
+
+3) GET https://passport.zhaopin.com/v4/sms/init?scene=10101010&countryCode=86
+      &encryptMobile=<...>&encryptRequestId=<uuid>
+      &validateId=<verify init 的 validateId>
+      &validateData={"type":20,"geetest_challenge":"<...>","geetest_validate":"<...>","geetest_seccode":"<...>|jordan"}
+      &sessionId=<sid>&...&appID=<appID>&redirectURL=https://i.zhaopin.com/blank
+   → {"code":100000,"data":{"validateId":"<新 id>","isNewUser":false},"message":"操作成功"}
+
+4) 用户收到 6 位短信码后提交（页面自动 POST）：
+   POST https://passport.zhaopin.com/v4/sms/loginAndRegister?validateId=<sms/init 的 id>
+      &validateData=<6 位短信码>&countryCode=86&encryptMobile=<...>&encryptRequestId=<uuid>
+      &rememberMe=true&agreementConsented=true&sessionId=<sid>&verifyType=1&...&redirectURL=https://i.zhaopin.com/blank
+   → 302/跳转 i.zhaopin.com/blank → https://www.zhaopin.com/recommend → /jobs/?pageMode=recommend
+
+5) 登录后页面加载：GET /c/i/user/detail、/c/i/checkToken、/c/i/global/config?at=&rt=、
+   cgate.zhaopin.com/imapi/imV2/getToken 等
+```
+
+- 短信验证码字段名是 `validateData`（不是 `code`）；短信码 6 位。
+- `agreementConsented=true` 必须（页面对应勾选「已阅读并同意」）。
+- 整体登录耗时约 40s（含发码等待）。
+
+### 16.2 登录态判定（实测）
+
+| 端点 | 未登录 | 已登录 |
+| --- | --- | --- |
+| `GET https://fe-api.zhaopin.com/c/i/checkToken?platform=13&version=0.0.0` | `{"code":200,"data":false}` | `{"code":200,"data":true}` |
+| `GET https://fe-api.zhaopin.com/c/i/user/detail?detail=true` | `{"code":500,"message":"获取用户信息失败"}` | `{"code":200,"apiCode":200,"data":{"Id":<userId>,"Name":"<已脱敏>","userId":<userId>,"currentIdentity":"1","userType":1,"Resume":{"ResumeNumber":"<long>","Id":"<resumeId>"}}}` |
+| `GET https://passport.zhaopin.com/napi/userinfo`（从 www 页面发 fetch） | `{"code":500,...}` | **仍为 500**（跨子域/凭证问题），不作为判定依据 |
+
+**结论**：登录态统一用 `checkToken.data===true` 判定；`user/detail` 取 userId/姓名/resumeNumber。
+
+### 16.3 会话 token 机制（核心）
+
+| 项 | 实测 |
+| --- | --- |
+| `at` cookie | `.zhaopin.com`，path=/，HttpOnly=false，SameSite=Lax；**有效期约 7 天**（实测在校准后的第 7 天 23:59:59 到期，如 `2026-11-21 23:59:59`） |
+| `rt` cookie | `.zhaopin.com`，path=/，HttpOnly=false，SameSite=Lax；**有效期约 30 天**（如 `2026-12-14 23:59:59`） |
+| 传递方式 | 前端把 `at`/`rt` 作为 **query 参数**（`?at=&rt=`）或 **请求头**（`x-zp-at`、`x-zp-rt`）传给 fe-api；`zp-gated-token` 另有 gated 头 |
+| 刷新接口 | `POST https://fe-api.zhaopin.com/c/i/refresh-token`，body `{"rt":"<rt>"}` |
+| 刷新响应 | `{"code":200,"message":"刷新token成功","data":{"appID":"<appID>","at":"<at>","atExpire":<秒≈7d>,"rt":"<rt>","rtExpire":<秒≈30d>,"userInfo":{"userId":...,"userStatus":1}}}` |
+| 刷新行为 | 在 at 仍有效时调用，返回**同一个 at/rt**（不轮换）并给出剩余有效期；**未观察到 Set-Cookie 自动更新**；推测 at 临近/过期时会签发新 at（需长期观察） |
+| 退出接口 | `GET https://fe-api.zhaopin.com/c/i/user/logout?at=&rt=`（前端 logoutCapi） |
+| 其他 cookie | `c_user_id`（session）、`x_passport_sid`（passport 域，session）、`zp_passport_deepknow_sessionId`（深察会话，session） |
+
+**续期设计结论**：客户端以 `rt`（30 天）为长期凭证；`status` 定期调 `refresh-token`（或读 at cookie 到期时间），在 at 剩余 < 阈值（如 1h）时刷新并用返回值重写 `at`/`rt` cookie；rt 过期（30 天）→ 置 `needs_human` 要求重新登录。
+
+### 16.4 profile 复用 / 自动登录（实测）
+
+- 关闭浏览器进程 → 重新用同一 profile 启动 → `checkToken` 仍为 `true`，首页显示登录态（消息数、用户名）。
+- `at`/`rt` 等持久 cookie 在 profile 中；`x_passport_sid`/`zp_passport_deepknow_sessionId` 等 session 级 cookie 关浏览器后丢失也不影响登录态。
+- 结论：**profile 复用即自动登录**；无需重扫。rt 30 天为最长免登录窗口。
+
+### 16.5 登录后能力差异（实测）
+
+| 项 | 匿名 | 登录后 |
+| --- | --- | --- |
+| 搜索首屏 | 20 条，`hasMore=false`，页面无「更多」 | 20 条，`hasMore=true`，可加载更多 |
+| 搜索翻页 | `p=2` 被服务端压回（同第 1 页） | **第 2 页起走 `POST /c/i/search/positions`**（见 16.6） |
+| 搜索默认排序 | `queryParams.order=4` | 未显式传 order 时服务端默认 `order=11`（个性化）；显式 `order=4` → 请求体 `order:0` + `sortType:"JOB_PUBLISH_TIME"` |
+| 职位详情薪资 | 页面显示 `**-**元`（state 有真值） | 页面正常显示（如 `5000-9000元`） |
+| 招聘者 | `staff` 部分字段 | `staff` 更全（`hrOnlineState`、`hrJob`、`activityLevel`、头像等） |
+| EdgeOne | 首次访问 `/jobdetail` 触发 | 登录后再次访问 `/jobdetail` **仍可能触发**（实测触发一次），说明 token 之外还有登录态变化/风险重评估；再次点击 `#verifyCheckbox` 通过，token 续期 30 天 |
+
+### 16.6 搜索分页真实机制（重要修正）
+
+- **第 1 页**：SSR 文档 `/jobs/?kw=&jl=&order=&p=1`，解析 `__INITIAL_STATE__.positionList`（20 条）。
+- **第 2 页起**：`POST https://fe-api.zhaopin.com/c/i/search/positions?platform=13&version=0.0.0`  
+  body 示例（脱敏）：
+  ```json
+  {
+    "S_SOU_FULL_INDEX": "外贸",
+    "S_SOU_WORK_CITY": "565",
+    "order": 0,
+    "actionid": "<uuid，页面生成>",
+    "pageSize": 20,
+    "pageIndex": 2,
+    "cvNumber": "<resumeNumber>",
+    "at": "<at>",
+    "rt": "<rt>",
+    "eventScenario": "pcSearchedSouSearch",
+    "anonymous": 0,
+    "resumeNumber": "<resumeNumber>",
+    "clickFilterBlackCompany": false,
+    "platform": 13,
+    "version": "0.0.0",
+    "sortType": "JOB_PUBLISH_TIME"
+  }
+  ```
+  响应关键字段：`code=200`、`data.list`（20 条 Position）、`data.isEndPage`（0/1）、`data.count`（实测 1000，疑为结果上限）、`data.sortTypes`（`DEFAULT 智能排序` / `HR_ACTIVE_TIME` / `JOB_PUBLISH_TIME`）。
+- 触发方式：滚动到列表底部（infinite scroll），不是 URL 参数。
+- 匿名模式：SSR `hasMore=false`；匿名下 POST 翻页未验证（预期受限）。
+
+### 16.7 公司全部职位分页（实测）
+
+- 公司职位页 `/companydetail/jobs-<companyNumber>/` 首屏 SSR 只返回 **20 条**（实测某公司 `onlinePositionsCount=21`、`onlinePositions` 20 条）。
+- 页面底部有 SEO 分页链接 `?p=2`，但实测 `?p=2`（带/不带尾斜杠）SSR 仍返回第 1 页内容，`onlinePositionsPage` 恒为 1；未观察到加载更多 XHR。
+- 结论：公司职位页 **v1 只取首屏 20 条**，超过 20 条时 `truncated=true`；完整分页机制待后续（可能需要 SPA 内交互/其他接口）。
+
+### 16.8 其他登录后实测
+
+- `status` 可用 `checkToken` + `user/detail` 组合，1~2 次轻量请求。
+- 搜索页 `__INITIAL_STATE__.user` 携带完整用户对象（姓名、resumeNumber 等）——缓存/日志需脱敏。
+- `positionList[i].jobDetailData.staff` 含招聘者姓名/头像/在线态（登录后更全）。
+- 公司详情页登录后仍为 SSR，工商信息不变。
+- 会话安全：`at`/`rt` 均为非 HttpOnly cookie（前端可读），因此客户端可在页面内读取并用于 API 请求头/参数；写入文档/日志时必须脱敏。
